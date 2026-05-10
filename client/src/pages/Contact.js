@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-//import Customerdashboard from "../components/customerdashboard.js";
 import Navbar from "../pages/Navbar.js";
-import "../stylesheets/customercontact.css";
+import "../stylesheets/dashboard-pages.css";
 import axios from "axios";
-import Farmerdashboard from "../components/farmerdashboard.js";
 
 export default function Customercontactdetails() {
   const [contactdet, setContactdet] = useState([]);
@@ -11,12 +9,13 @@ export default function Customercontactdetails() {
   useEffect(() => {
     fetchData();
   }, []);
+
   useEffect(() => {
     const user_id = localStorage.getItem("userEmail");
     if (user_id) {
       setFormData((prevData) => ({
         ...prevData,
-        user_id: user_id, // Assuming email serves as farmer_id
+        user_id: user_id,
       }));
     }
   }, []);
@@ -34,6 +33,7 @@ export default function Customercontactdetails() {
       console.error("Error fetching data:", error);
     }
   };
+
   const [formData, setFormData] = useState({
     user_id: "",
     street1: "",
@@ -69,126 +69,128 @@ export default function Customercontactdetails() {
       );
 
       if (response.ok) {
-        const data = response.json();
-        console.log(data);
-        alert("You have successfully updated contact details ");
+        alert("You have successfully updated contact details");
+        fetchData();
       } else {
-        alert("Oops!  Please double-check your information and try again.");
-        throw new Error("Failed to submit form");
+        alert("Oops! Please double-check your information and try again.");
       }
     } catch (error) {
       console.error("Error:", error);
     }
-    // Add logic to handle form submission (e.g., sending data to backend)
-    console.log(formData);
-    // Reset form data after submission if needed
   };
 
   return (
-    <>
-      <Navbar />
-      <Farmerdashboard />
-      <div className="customercontactcontainer">
-        <h1>Your Contact Details</h1>
-        <form className="cform">
-          <label className="a">Street Address 1:</label>
+    <div className="dashboard-page-container">
+      <h1>Your Contact Details</h1>
+
+      <h2>Add / Update Address</h2>
+      <form className="dashboard-form" onSubmit={handleSubmit}>
+        <div className="form-row">
+          <div>
+            <label>Street Address 1:</label>
+            <input
+              type="text"
+              name="street1"
+              value={formData.street1}
+              onChange={handleChange}
+              placeholder="Enter primary street address"
+              required
+            />
+          </div>
+          <div>
+            <label>Street Address 2 (Optional):</label>
+            <input
+              type="text"
+              name="street2"
+              value={formData.street2}
+              onChange={handleChange}
+              placeholder="Enter secondary street address"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div>
+            <label>City:</label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="Enter city"
+              required
+            />
+          </div>
+          <div>
+            <label>State:</label>
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              placeholder="Enter state"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div>
+            <label>Country:</label>
+            <input
+              type="text"
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              placeholder="Enter country"
+              required
+            />
+          </div>
+          <div>
+            <label>Zipcode:</label>
+            <input
+              type="number"
+              name="zipcode"
+              value={formData.zipcode}
+              onChange={handleChange}
+              placeholder="Enter zipcode"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label>Phone:</label>
           <input
-            type="text"
-            id="add1"
-            name="street1"
-            value={formData.street1}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label className="a">Street Address 2:</label>
-          <input
-            type="text"
-            id="add2"
-            name="street2"
-            value={formData.street2}
-            onChange={handleChange}
-          />
-          <br />
-          <label className="a">City:</label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label className="a">State:</label>
-          <input
-            type="text"
-            id="state"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label className="a">Country:</label>
-          <input
-            type="text"
-            id="country"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label className="a">Zipcode:</label>
-          <input
-            type="number"
-            id="zipcode"
-            name="zipcode"
-            value={formData.zipcode}
-            onChange={handleChange}
-            className="no-arrow-input"
-            required
-          />
-          <br />
-          <label className="a">Phone:</label>
-          <input
-            type="number"
-            id="phone"
+            type="tel"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            inputMode="numeric"
-            className="no-arrow-input"
+            placeholder="Enter phone number"
             required
           />
-          <br />
-          <button onClick={handleSubmit} type="submit">
-            Submit
-          </button>
-        </form>
-      </div>
-      <div className="contactslist">
-        <h4> Your Previous Contact Details :</h4>
-        <table>
+        </div>
+
+        <button type="submit">Save Details</button>
+      </form>
+
+      <h2>Your Previous Addresses</h2>
+      {contactdet.length > 0 ? (
+        <table className="data-table">
           <thead>
             <tr>
-              <th>user_id</th>
-              <th>address_id</th>
-              <th>street1</th>
-              <th>street2</th>
-              <th>city</th>
-              <th>state</th>
-              <th>country</th>
+              <th>Street 1</th>
+              <th>Street 2</th>
+              <th>City</th>
+              <th>State</th>
+              <th>Country</th>
               <th>Zipcode</th>
-              <th>phone</th>
+              <th>Phone</th>
             </tr>
           </thead>
           <tbody>
             {contactdet.map((contactd) => (
-              <tr key={contactd.id}>
-                <td>{contactd.user_id}</td>
-                <td>{contactd.address_id}</td>
+              <tr key={contactd.address_id}>
                 <td>{contactd.street1}</td>
                 <td>{contactd.street2}</td>
                 <td>{contactd.city}</td>
@@ -200,7 +202,10 @@ export default function Customercontactdetails() {
             ))}
           </tbody>
         </table>
-      </div>
-    </>
+      ) : (
+        <p style={{ textAlign: "center", color: "#999" }}>No addresses saved yet.</p>
+      )}
+    </div>
   );
 }
+

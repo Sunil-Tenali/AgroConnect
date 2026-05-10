@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { NavLink } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import "./farmerdashboard.css";
 
 export default function Farmerdashboard() {
@@ -58,6 +58,14 @@ export default function Farmerdashboard() {
         className="fa-bars"
         onClick={handleToggleSidebar}
       />
+
+      {/* Main content */}
+      <main className="farmer-dashboard-main">
+        <h2>Farmer Dashboard</h2>
+        <p>Welcome, {localStorage.getItem("userEmail") || "farmer"}.</p>
+        <p>Pick a section from the menu or continue below.</p>
+        <Outlet />
+      </main>
     </>
   );
 }

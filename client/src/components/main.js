@@ -10,6 +10,7 @@ export default function Main() {
       const navbarEl = document.querySelector(".navbar");
       const bottomContainerEl = document.querySelector(".bottom-container");
 
+      // Activate sticky navbar when user scrolls past the hero section
       if (
         window.scrollY >
         bottomContainerEl.offsetTop - navbarEl.offsetHeight - 0
@@ -38,7 +39,6 @@ export default function Main() {
 function Navbar({ isNavbarActive }) {
   return (
     <div className={isNavbarActive ? "navbar active" : "navbar"}>
-      {/*<img src="./logo.svg" alt="logo">*/}
       <ul className={"navbarmain"}>
         <li>
           <a href="a">Home</a>
@@ -62,7 +62,7 @@ function Navbar({ isNavbarActive }) {
 function Header() {
   return (
     <div>
-      <div className="bottom-container">{/* Bottom container content */}</div>
+      <div className="bottom-container"></div>
       <img
         src={"images/agro5.jpg "}
         alt={"Agro Connect"}
@@ -73,7 +73,6 @@ function Header() {
         "Connecting Farmers and Customers: AgroConnect - Grow Together, Harvest
         Together."
       </p>
-      {/*<div style={{ height: "100px" }}></div>*/}
     </div>
   );
 }

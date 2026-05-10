@@ -14,6 +14,7 @@ function Customersignup() {
     user_type: "1",
   });
 
+  // Update form state on input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -22,10 +23,12 @@ function Customersignup() {
     }));
   };
 
+  // Handle customer registration form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Send registration request to backend
       const response = await fetch("http://localhost:4000/customersignup", {
         method: "POST",
         headers: {
@@ -35,19 +38,10 @@ function Customersignup() {
       });
 
       if (response.ok) {
-        const data = response.json();
-        console.log(data); // Log response data from the server
         setSignedUp(true);
         setSubmitButtonValue("Signed up");
         alert("You have successfully signed up! \n Go back to login page");
-        //  reset the form after successful submission
-        /* setFormData({
-          fname: "",
-          lname: "",
-          email: "",
-          password: "",
-          user_type: "0",
-        });*/
+        // TODO: Redirect to login page instead of showing alert
       } else {
         alert(
           "Oops! It seems like you're already registered or the email provided is incorrect. Please double-check your information and try again."

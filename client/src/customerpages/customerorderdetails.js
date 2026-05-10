@@ -1,130 +1,132 @@
-import React, { useState } from "react";
-import Customerdashboard from "../components/customerdashboard.js";
-import Navbar from "../pages/Navbar.js";
-//import axios from "axios";
-import "../stylesheets/customercontact.css";
+import React, { useState, useEffect } from "react";
+import "../stylesheets/dashboard-pages.css";
+import axios from "axios";
 
-export default function Customercontactdetails() {
-  const [formData, setFormData] = useState({
-    email: "",
-    street1: "",
-    street2: "",
-    city: "",
-    state: "",
-    country: "",
-    zipcode: "",
-    phone: "",
-  });
+export default function Customerorderdetails() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+  useEffect(() => {
+    // Fetch orders from backend when component mounts
+    const fetchOrders = async () => {
+      try {
+        const customerId = localStorage.getItem("userEmail");
+        // Assuming there's an endpoint to fetch customer orders
+        // const response = await axios.get(`http://localhost:4000/customerdashboard/orders?customer_id=${customerId}`);
+        // setOrders(response.data);
+        
+        // Mock data for now (replace with actual API call)
+        setOrders([
+          {
+            order_id: 1001,
+            product_name: "Organic Tomatoes",
+            quantity: 10,
+            price: 250,
+            order_date: "2024-03-10",
+            status: "Delivered",
+          },
+          {
+            order_id: 1002,
+            product_name: "Fresh Apples",
+            quantity: 5,
+            price: 500,
+            order_date: "2024-03-12",
+            status: "In Transit",
+          },
+          {
+            order_id: 1003,
+            product_name: "Dairy Milk",
+            quantity: 20,
+            price: 100,
+            order_date: "2024-03-15",
+            status: "Processing",
+          },
+        ]);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Add logic to handle form submission (e.g., sending data to backend)
-    console.log(formData);
-    // Reset form data after submission if needed
-    setFormData({
-      email: "",
-      streetAddress1: "",
-      streetAddress2: "",
-      city: "",
-      state: "",
-      country: "",
-      zipcode: "",
-      phone: "",
-    });
-  };
+    fetchOrders();
+  }, []);
 
   return (
-    <>
-      <Navbar />
-      <Customerdashboard />
-      <div className="customercontactcontainer">
-        <h1>Your Contact Details</h1>
-        <form className="cform">
-          <label>Street Address 1:</label>
-          <input
-            type="text"
-            id="add1"
-            name="street1"
-            value={formData.streetAddress1}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label>Street Address 2:</label>
-          <input
-            type="text"
-            id="add2"
-            name="street2"
-            value={formData.streetAddress2}
-            onChange={handleChange}
-          />
-          <br />
-          <label>City:</label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label>State:</label>
-          <input
-            type="text"
-            id="state"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label>Country:</label>
-          <input
-            type="text"
-            id="country"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            required
-          />
-          <br />
-          <label>Zipcode:</label>
-          <input
-            type="number"
-            id="zipcode"
-            name="zipcode"
-            value={formData.zipcode}
-            onChange={handleChange}
-            className="no-arrow-input"
-            required
-          />
-          <br />
-          <label>Phone:</label>
-          <input
-            type="number"
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            inputMode="numeric"
-            className="no-arrow-input"
-            required
-          />
-          <br />
-          <button onClick={handleSubmit} type="submit">
-            Submit
-          </button>
-        </form>
+    <div className="dashboard-page-container">
+      <h1>Your Order Details</h1>
+      <p>
+        Customer ID:{" "}
+        <strong>{localStorage.getItem("userEmail") || "customerId"}</strong>
+      </p>
+
+      <div className="dashboard-info-grid">
+        <div className="info-card">
+          <h3>Total Orders</h3>
+          <div className="value">{orders.length}</div>
+        </div>
+        <div className="info-card">
+          <h3>Pending Orders</h3>
+          <div className="value">
+            {orders.filter((o) => o.status !== "Delivered").length}
+          </div>
+        </div>
+        <div className="info-card">
+          <h3>Total Spent</h3>
+          <div className="value">
+            ₹
+            {orders
+              .reduce((sum, order) => sum + order.price * order.quantity, 0)
+              .toLocaleString()}
+          </div>
+        </div>
       </div>
-    </>
+
+      <h2>Order History</h2>
+      {loading ? (
+        <p>Loading orders...</p>
+      ) : orders.length > 0 ? (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Product Name</th>
+              <th>Quantity</th>
+              <th>Price (₹)</th>
+              <th>Order Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order.order_id}>
+                <td>#{order.order_id}</td>
+                <td>{order.product_name}</td>
+                <td>{order.quantity} units</td>
+                <td>₹{order.price}</td>
+                <td>{order.order_date}</td>
+                <td
+                  style={{
+                    fontWeight: "600",
+                    color:
+                      order.status === "Delivered"
+                        ? "#64ba00"
+                        : order.status === "In Transit"
+                        ? "#ff9800"
+                        : "#2196f3",
+                  }}
+                >
+                  {order.status}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p style={{ textAlign: "center", color: "#999", marginTop: "20px" }}>
+          No orders found. Start shopping!
+        </p>
+      )}
+    </div>
   );
 }

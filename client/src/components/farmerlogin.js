@@ -7,15 +7,18 @@ function Farmerlogin() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
+  // Update form state on input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  // Handle login form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Send login credentials to backend
       const response = await fetch("http://localhost:4000/login", {
         method: "POST",
         headers: {
@@ -25,16 +28,16 @@ function Farmerlogin() {
       });
 
       if (response.ok) {
-        //const data = await response.json();
+        // Store user email in localStorage for session management
+        // TODO: Implement JWT token-based authentication instead of email storage
         localStorage.setItem("userEmail", formData.email);
-        //localStorage.setItem("token", data.token); // Store token in localStorage
         navigate("/farmerdashboard/home");
-        // Redirect or perform other actions on successful login
       } else {
         throw new Error("Failed to login");
       }
     } catch (error) {
       console.error("Error:", error);
+      // TODO: Add user-friendly error notification
     }
   };
 
