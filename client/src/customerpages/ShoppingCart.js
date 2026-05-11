@@ -1,164 +1,198 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../stylesheets/dashboard-pages.css";
+import api from "../api";
 
 export default function ShoppingCart() {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      product_name: "Organic Tomatoes",
-      quantity: 5,
-      price: 250,
-      farmer: "Rajesh Kumar",
-    },
-    {
-      id: 2,
-      product_name: "Fresh Apples",
-      quantity: 3,
-      price: 500,
-      farmer: "Priya Singh",
-    },
-  ]);
+  const customerId = sessionStorage.getItem("userEmail");
 
-  const handleRemove = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-  };
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleQuantityChange = (id, newQuantity) => {
-    if (newQuantity > 0) {
-      setCartItems(
-        cartItems.map((item) =>
-          item.id === id ? { ...item, quantity: newQuantity } : item
-        )
+  const fetchCart = async () => {
+    if (!customerId) {
+      setError("Customer email is missing. Please login again.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      const response = await api.get(
+        `/customerdashboard/cart?customer_id=${encodeURIComponent(customerId)}`
       );
+      setCartItems(response.data);
+    } catch (err) {
+      console.error("Error fetching cart:", err);
+      setError(err.response?.data?.error || "Unable to fetch cart.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const totalPrice = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+  useEffect(() => {
+    fetchCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId]);
+
+  const handleRemove = async (productId) => {
+    try {
+      setSaving(true);
+      const response = await api.delete(
+        `/customerdashboard/cart/${productId}?customer_id=${encodeURIComponent(customerId)}`
+      );
+      setCartItems(response.data.cart);
+    } catch (err) {
+      console.error("Error removing cart item:", err);
+      alert(err.response?.data?.error || "Unable to remove item.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleQuantityChange = async (productId, newQuantity) => {
+    const quantity = Number(newQuantity);
+
+    if (Number.isNaN(quantity) || quantity < 1) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await api.patch(`/customerdashboard/cart/${productId}`, {
+        customer_id: customerId,
+        quantity,
+      });
+      setCartItems(response.data.cart);
+    } catch (err) {
+      console.error("Error updating quantity:", err);
+      alert(err.response?.data?.error || "Unable to update quantity.");
+      await fetchCart();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    try {
+      setSaving(true);
+      await api.post("/customerdashboard/placeorder", {
+        customer_id: customerId,
+      });
+      alert("Order placed successfully.");
+      await fetchCart();
+    } catch (err) {
+      console.error("Error placing order:", err);
+      alert(
+        err.response?.data?.error ||
+          "Failed to place order. Save your contact address before checkout."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const totalQuantity = cartItems.reduce(
+    (sum, item) => sum + Number(item.quantity),
     0
   );
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + Number(item.subtotal),
+    0
+  );
+  const shipping = cartItems.length > 0 ? 50 : 0;
 
   return (
     <div className="dashboard-page-container">
       <h1>Shopping Cart</h1>
-      <p>
-        Review and manage your items before checkout
-      </p>
+      <p>Review and manage your items before checkout.</p>
 
-      {cartItems.length > 0 ? (
+      <div className="dashboard-info-grid">
+        <div className="info-card">
+          <h3>Total Items</h3>
+          <div className="value">{cartItems.length}</div>
+        </div>
+        <div className="info-card">
+          <h3>Total Quantity</h3>
+          <div className="value">{totalQuantity}</div>
+        </div>
+        <div className="info-card">
+          <h3>Subtotal</h3>
+          <div className="value">₹{subtotal.toLocaleString()}</div>
+        </div>
+      </div>
+
+      {loading && <p>Loading cart...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {!loading && cartItems.length > 0 ? (
         <>
-          <div className="dashboard-info-grid">
-            <div className="info-card">
-              <h3>Total Items</h3>
-              <div className="value">{cartItems.length}</div>
-            </div>
-            <div className="info-card">
-              <h3>Total Quantity</h3>
-              <div className="value">
-                {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
-              </div>
-            </div>
-            <div className="info-card">
-              <h3>Total Price</h3>
-              <div className="value">₹{totalPrice.toLocaleString()}</div>
-            </div>
-          </div>
-
           <h2>Cart Items</h2>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Farmer</th>
-                <th>Price (₹)</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cartItems.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.product_name}</td>
-                  <td>{item.farmer}</td>
-                  <td>₹{item.price}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(item.id, parseInt(e.target.value))
-                      }
-                      style={{
-                        width: "50px",
-                        padding: "5px",
-                        borderRadius: "4px",
-                        border: "1px solid #ccc",
-                      }}
-                    />
-                  </td>
-                  <td>₹{(item.price * item.quantity).toLocaleString()}</td>
-                  <td>
-                    <button
-                      onClick={() => handleRemove(item.id)}
-                      style={{
-                        padding: "5px 10px",
-                        backgroundColor: "#ff6b6b",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </td>
+          <div style={{ overflowX: "auto" }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Farmer</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Subtotal</th>
+                  <th>Available</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div
-            style={{
-              marginTop: "30px",
-              padding: "20px",
-              backgroundColor: "#f5f5f5",
-              borderRadius: "8px",
-              textAlign: "right",
-            }}
-          >
-            <h3>Order Summary</h3>
-            <p>
-              <strong>Subtotal:</strong> ₹{totalPrice.toLocaleString()}
-            </p>
-            <p>
-              <strong>Shipping:</strong> ₹50
-            </p>
-            <h2 style={{ color: "#64ba00" }}>
-              <strong>Total: ₹{(totalPrice + 50).toLocaleString()}</strong>
-            </h2>
-            <button
-              style={{
-                marginTop: "15px",
-                padding: "12px 30px",
-                backgroundColor: "#64ba00",
-                color: "white",
-                fontWeight: "600",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
-            >
-              Proceed to Checkout
-            </button>
+              </thead>
+              <tbody>
+                {cartItems.map((item) => (
+                  <tr key={item.product_id}>
+                    <td>{item.product_name}</td>
+                    <td>{item.farmer_name || item.farmer_id}</td>
+                    <td>₹{Number(item.price).toLocaleString()}</td>
+                    <td>
+                      <input
+                        type="number"
+                        min="1"
+                        max={item.available_units}
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleQuantityChange(item.product_id, e.target.value)
+                        }
+                        disabled={saving}
+                        style={{ width: "70px", padding: "6px" }}
+                      />
+                    </td>
+                    <td>₹{Number(item.subtotal).toLocaleString()}</td>
+                    <td>{item.available_units}</td>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(item.product_id)}
+                        disabled={saving}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+
+          <h2>Order Summary</h2>
+          <p>Subtotal: ₹{subtotal.toLocaleString()}</p>
+          <p>Shipping: ₹{shipping.toLocaleString()}</p>
+          <h2>Total: ₹{(subtotal + shipping).toLocaleString()}</h2>
+          <button type="button" onClick={handlePlaceOrder} disabled={saving}>
+            {saving ? "Processing..." : "Proceed to Checkout"}
+          </button>
         </>
-      ) : (
-        <p style={{ textAlign: "center", color: "#999", marginTop: "40px" }}>
-          Your cart is empty. Start adding items!
-        </p>
+      ) : null}
+
+      {!loading && cartItems.length === 0 && !error && (
+        <div className="empty-state">
+          <p>Your cart is empty. Start adding items!</p>
+        </div>
       )}
     </div>
   );

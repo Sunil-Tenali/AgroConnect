@@ -1,131 +1,106 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "../stylesheets/dashboard-pages.css";
-import axios from "axios";
+import api from "../api";
 
 export default function Customerorderdetails() {
+  const customerId = sessionStorage.getItem("userEmail");
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Fetch orders from backend when component mounts
     const fetchOrders = async () => {
+      if (!customerId) {
+        setError("Customer email is missing. Please login again.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const customerId = localStorage.getItem("userEmail");
-        // Assuming there's an endpoint to fetch customer orders
-        // const response = await axios.get(`http://localhost:4000/customerdashboard/orders?customer_id=${customerId}`);
-        // setOrders(response.data);
-        
-        // Mock data for now (replace with actual API call)
-        setOrders([
-          {
-            order_id: 1001,
-            product_name: "Organic Tomatoes",
-            quantity: 10,
-            price: 250,
-            order_date: "2024-03-10",
-            status: "Delivered",
-          },
-          {
-            order_id: 1002,
-            product_name: "Fresh Apples",
-            quantity: 5,
-            price: 500,
-            order_date: "2024-03-12",
-            status: "In Transit",
-          },
-          {
-            order_id: 1003,
-            product_name: "Dairy Milk",
-            quantity: 20,
-            price: 100,
-            order_date: "2024-03-15",
-            status: "Processing",
-          },
-        ]);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
+        setLoading(true);
+        setError("");
+        const response = await api.get(
+          `/customerdashboard/orders?customer_id=${encodeURIComponent(customerId)}`
+        );
+        setOrders(response.data);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        setError(err.response?.data?.error || "Unable to fetch orders.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [customerId]);
+
+  const totalSpent = orders.reduce(
+    (sum, order) => sum + Number(order.price) * Number(order.quantity),
+    0
+  );
 
   return (
     <div className="dashboard-page-container">
       <h1>Your Order Details</h1>
-      <p>
-        Customer ID:{" "}
-        <strong>{localStorage.getItem("userEmail") || "customerId"}</strong>
-      </p>
+      <p>Customer ID: {customerId || "Not logged in"}</p>
 
       <div className="dashboard-info-grid">
         <div className="info-card">
           <h3>Total Orders</h3>
-          <div className="value">{orders.length}</div>
+          <div className="value">{new Set(orders.map((o) => o.order_id)).size}</div>
         </div>
         <div className="info-card">
-          <h3>Pending Orders</h3>
+          <h3>Pending Items</h3>
           <div className="value">
             {orders.filter((o) => o.status !== "Delivered").length}
           </div>
         </div>
         <div className="info-card">
           <h3>Total Spent</h3>
-          <div className="value">
-            ₹
-            {orders
-              .reduce((sum, order) => sum + order.price * order.quantity, 0)
-              .toLocaleString()}
-          </div>
+          <div className="value">₹{totalSpent.toLocaleString()}</div>
         </div>
       </div>
 
       <h2>Order History</h2>
-      {loading ? (
-        <p>Loading orders...</p>
-      ) : orders.length > 0 ? (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Product Name</th>
-              <th>Quantity</th>
-              <th>Price (₹)</th>
-              <th>Order Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.order_id}>
-                <td>#{order.order_id}</td>
-                <td>{order.product_name}</td>
-                <td>{order.quantity} units</td>
-                <td>₹{order.price}</td>
-                <td>{order.order_date}</td>
-                <td
-                  style={{
-                    fontWeight: "600",
-                    color:
-                      order.status === "Delivered"
-                        ? "#64ba00"
-                        : order.status === "In Transit"
-                        ? "#ff9800"
-                        : "#2196f3",
-                  }}
-                >
-                  {order.status}
-                </td>
+      {loading && <p>Loading orders...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {!loading && orders.length > 0 ? (
+        <div style={{ overflowX: "auto" }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Order Date</th>
+                <th>Delivery Date</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p style={{ textAlign: "center", color: "#999", marginTop: "20px" }}>
-          No orders found. Start shopping!
-        </p>
+            </thead>
+            <tbody>
+              {orders.map((order, index) => (
+                <tr key={`${order.order_id}-${order.product_id}-${index}`}>
+                  <td>#{order.order_id}</td>
+                  <td>{order.product_name}</td>
+                  <td>{order.quantity}</td>
+                  <td>₹{Number(order.price).toLocaleString()}</td>
+                  <td>{order.order_date}</td>
+                  <td>{order.delivery_date || "-"}</td>
+                  <td>{order.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {!loading && orders.length === 0 && !error && (
+        <div className="empty-state">
+          <p>No orders found. Start shopping!</p>
+        </div>
       )}
     </div>
   );

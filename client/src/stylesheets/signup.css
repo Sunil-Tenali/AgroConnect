@@ -86,6 +86,26 @@ label {
   color: #ffffff;
   transform: scale(1.05);
 }
+
+.login-nav-btn{
+  width: 100% !important;
+  margin-top: 10px !important;
+  padding: 13px 18px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #0f8f46, #0b5f33) !important;
+  color: #ffffff !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  box-shadow: 0 12px 28px rgba(12, 93, 49, 0.28) !important;
+}
+.login-nav-btn:hover {
+  background-color: #008080;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
 .success-message {
   color: green;
   font-weight: bold;

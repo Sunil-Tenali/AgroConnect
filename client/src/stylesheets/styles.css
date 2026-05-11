@@ -1,9 +1,3 @@
-/* =========================================================
-   AgroConnect hotfix after modern-ui.css
-   Paste this at the VERY BOTTOM of client/src/stylesheets/modern-ui.css
-   ========================================================= */
-
-/* 1) Restore Farmer/Customer login pages */
 .mainn {
   position: fixed !important;
   inset: 0 !important;
@@ -12,6 +6,8 @@
   overflow: hidden !important;
   z-index: 0 !important;
 }
+
+
 
 .mainn video {
   position: fixed !important;
@@ -110,27 +106,29 @@ form.content input[type="submit"] {
   box-shadow: 0 12px 28px rgba(12, 93, 49, 0.28) !important;
 }
 
+
+
 /* 2) Keep dashboard content below the browser/top area and avoid huge overlap */
 .customer-dashboard-main,
 .farmer-dashboard-main {
   position: relative !important;
   min-height: 100vh !important;
   padding: 86px clamp(20px, 5vw, 72px) 48px !important;
-  background: linear-gradient(135deg, #f6fbf2 0%, #edf7e8 100%) !important;
+  background: linear-gradient(135deg, #6eed06 0%, #edf7e8 100%) !important;
   color: #143a28 !important;
   box-sizing: border-box !important;
 }
 
-.customer-dashboard-main > h2,
-.farmer-dashboard-main > h2 {
+.customer-dashboard-main>h2,
+.farmer-dashboard-main>h2 {
   margin: 0 0 10px !important;
   font-size: clamp(2.2rem, 5vw, 4rem) !important;
   line-height: 1.05 !important;
   color: #123a27 !important;
 }
 
-.customer-dashboard-main > p,
-.farmer-dashboard-main > p {
+.customer-dashboard-main>p,
+.farmer-dashboard-main>p {
   max-width: 760px !important;
   margin: 8px 0 !important;
   color: #5e7066 !important;

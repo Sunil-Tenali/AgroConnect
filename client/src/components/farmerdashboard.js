@@ -1,69 +1,89 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { NavLink, Outlet } from "react-router-dom";
+import { faBars, faTimes, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import "./farmerdashboard.css";
 
 export default function Farmerdashboard() {
   const [showSidebar, setShowSidebar] = useState(false);
+  const navigate = useNavigate();
 
   const handleToggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem("userEmail");
+    sessionStorage.removeItem("addressid");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("userType");
+
+    navigate("/farmerLogin");
+  };
+
+
   return (
     <>
-      {/* Sidebar */}
-
-      <div className={`sidebar ${showSidebar ? "show-sidebar" : ""}`}>
+      <aside className={`sidebar ${showSidebar ? "show-sidebar" : ""}`}>
         <div className="sidebar-header">
-          <h1> Explore Menu </h1>
-          {/*<h2>Grow with Agro Connect</h2>*/}
+          <h1>Explore Menu</h1>
+
           <FontAwesomeIcon
             icon={faTimes}
             className="fa-times"
             onClick={handleToggleSidebar}
           />
         </div>
-        <ul className="menu">
-          <li>
-            <NavLink to="/farmerdashboard/home">Home</NavLink>
-          </li>
-          <li>
-            <NavLink to="/farmerdashboard/products">Products Details</NavLink>
-          </li>
-          <li>
-            <NavLink to="/farmerdashboard/Contact">Contact details</NavLink>
-          </li>
-          <li>
-            <NavLink to="/farmerdashboard/machinery">Your Machinery</NavLink>
-          </li>
-          <li>
-            <NavLink to="/farmerdashboard/available-machinery">
-              Available Machinery
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/farmerdashboard/rented">Rented</NavLink>
-          </li>
-          <li>
-            <NavLink to="/farmerdashboard/reviews">Reviews</NavLink>
-          </li>
-        </ul>
-      </div>
 
-      {/* Toggle button */}
+        <nav className="menu">
+          <NavLink to="/farmerdashboard/home" onClick={handleToggleSidebar}>
+            Home
+          </NavLink>
+
+          <NavLink to="/farmerdashboard/products" onClick={handleToggleSidebar}>
+            Products Details
+          </NavLink>
+
+          <NavLink to="/farmerdashboard/contact" onClick={handleToggleSidebar}>
+            Contact details
+          </NavLink>
+
+          <NavLink to="/farmerdashboard/machinery" onClick={handleToggleSidebar}>
+            Your Machinery
+          </NavLink>
+
+          <NavLink
+            to="/farmerdashboard/availablemachinery"
+            onClick={handleToggleSidebar}
+          >
+            Available Machinery
+          </NavLink>
+
+          <NavLink to="/farmerdashboard/rented" onClick={handleToggleSidebar}>
+            Rented
+          </NavLink>
+
+          <NavLink to="/farmerdashboard/reviews" onClick={handleToggleSidebar}>
+            Reviews
+          </NavLink>
+
+          <button className="logout-btn" onClick={handleLogout}>
+            <FontAwesomeIcon icon={faRightFromBracket} />
+            <span>Logout</span>
+          </button>
+        </nav>
+      </aside>
+
       <FontAwesomeIcon
         icon={faBars}
         className="fa-bars"
         onClick={handleToggleSidebar}
       />
 
-      {/* Main content */}
-      <main className="farmer-dashboard-main">
+      <main className="dashboard-main">
         <h2>Farmer Dashboard</h2>
-        <p>Welcome, {localStorage.getItem("userEmail") || "farmer"}.</p>
-        <p>Pick a section from the menu or continue below.</p>
+        <p>Welcome, {sessionStorage.getItem("userName") || "farmer"}.</p>
+
         <Outlet />
       </main>
     </>

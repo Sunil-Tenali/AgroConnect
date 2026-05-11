@@ -1,32 +1,36 @@
-import React, { useState, useEffect } from "react";
-import "../stylesheets/productHome.css";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import "../stylesheets/dashboard-pages.css";
+import api from "../api";
 
 export default function Producthome() {
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const customer_id = localStorage.getItem("userEmail");
+  const customerId = sessionStorage.getItem("userEmail");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchProducts = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:4000/customerdashboard/productHome"
-      );
-
-      console.log(response);
+      setLoading(true);
+      setError("");
+      const response = await api.get("/customerdashboard/productHome");
       setProducts(response.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setError(err.response?.data?.error || "Unable to fetch products.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
   const handleCheckboxChange = (event) => {
-    const productId = parseInt(event.target.value);
+    const productId = Number(event.target.value);
 
     if (event.target.checked) {
       setSelectedProducts((prevSelected) => [...prevSelected, productId]);
@@ -38,105 +42,142 @@ export default function Producthome() {
   };
 
   const handleAddToCart = async () => {
+    if (!customerId) {
+      alert("Please login again. Customer email is missing.");
+      return;
+    }
+
     if (selectedProducts.length === 0) {
       alert("Please select at least one product.");
       return;
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:4000/customerdashboard/productHome",
-        {
-          customer_id,
-          product_ids: selectedProducts,
-        }
-      );
-
-      console.log(response);
+      setSaving(true);
+      await api.post("/customerdashboard/productHome", {
+        customer_id: customerId,
+        product_ids: selectedProducts,
+      });
       alert("Products added to cart successfully.");
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      alert("Failed to add products to cart.");
+      setSelectedProducts([]);
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      alert(err.response?.data?.error || "Failed to add products to cart.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handlePlaceOrder = async () => {
-    try {
-      const response = await axios.post(
-        "http://localhost:4000/customerdashboard/placeorder",
-        { customer_id }
-      );
+    if (!customerId) {
+      alert("Please login again. Customer email is missing.");
+      return;
+    }
 
-      console.log(response);
+    try {
+      setSaving(true);
+      await api.post("/customerdashboard/placeorder", {
+        customer_id: customerId,
+      });
       alert("Order placed successfully.");
-    } catch (error) {
-      console.error("Error placing order:", error);
-      alert("Failed to place order.");
+      await fetchProducts();
+    } catch (err) {
+      console.error("Error placing order:", err);
+      alert(
+        err.response?.data?.error ||
+          "Failed to place order. Add items to cart and save your contact address first."
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="pcontainer">
-      <h1>Welcome to Agro Connect Customer Home</h1>
+    <div className="dashboard-page-container">
+      <h1>Agro Connect Customer Home</h1>
+      <p>Browse fresh products from farmers and add them to your cart.</p>
 
-      <div className="custprofile">
-        <h2>Your Name : Customer Name</h2>
-        <h3>Your Email : {customer_id}</h3>
+      <div className="dashboard-info-grid">
+        <div className="info-card">
+          <h3>Customer Email</h3>
+          <div className="value" style={{ fontSize: "16px" }}>
+            {customerId || "Not logged in"}
+          </div>
+        </div>
+        <div className="info-card">
+          <h3>Available Products</h3>
+          <div className="value">{products.length}</div>
+        </div>
+        <div className="info-card">
+          <h3>Selected</h3>
+          <div className="value">{selectedProducts.length}</div>
+        </div>
       </div>
 
-      <div className="productslist">
-        <h4>Product List :</h4>
+      <h2>Product List</h2>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Product ID</th>
-              <th>Name</th>
-              <th>Farmer ID</th>
-              <th>Price</th>
-              <th>Rating</th>
-              <th>Review Count</th>
-              <th>Category ID</th>
-              <th>Description</th>
-              <th>Available Units</th>
-              <th>In Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+      {loading && <p>Loading products...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.product_id}>
-                <td>{product.product_id}</td>
-                <td>{product.name}</td>
-                <td>{product.farmer_id}</td>
-                <td>{product.price}</td>
-                <td>{product.rating}</td>
-                <td>{product.review_count}</td>
-                <td>{product.category_id}</td>
-                <td>{product.description}</td>
-                <td>{product.available_units}</td>
-                <td>{product.in_stock}</td>
-
-                <td>
-                  <input
-                    type="checkbox"
-                    id={`product_${product.product_id}`}
-                    name={`product_${product.product_id}`}
-                    value={product.product_id}
-                    onChange={handleCheckboxChange}
-                  />
-                  <label htmlFor={`product_${product.product_id}`}></label>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="actions">
-          <button onClick={handleAddToCart}>Add to Cart</button>
-          <button onClick={handlePlaceOrder}>Place Order</button>
+      {!loading && products.length === 0 && (
+        <div className="empty-state">
+          <p>No products are available right now.</p>
         </div>
+      )}
+
+      {!loading && products.length > 0 && (
+        <div style={{ overflowX: "auto" }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Select</th>
+                <th>Product</th>
+                <th>Farmer</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Rating</th>
+                <th>Available Units</th>
+                <th>Carrier</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.product_id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      id={`product_${product.product_id}`}
+                      value={product.product_id}
+                      checked={selectedProducts.includes(product.product_id)}
+                      onChange={handleCheckboxChange}
+                      disabled={!product.in_stock || product.available_units <= 0}
+                    />
+                  </td>
+                  <td>{product.name}</td>
+                  <td>{product.farmer_name || product.farmer_id}</td>
+                  <td>{product.category_name}</td>
+                  <td>₹{Number(product.price).toLocaleString()}</td>
+                  <td>
+                    {Number(product.rating).toFixed(1)} ({product.review_count})
+                  </td>
+                  <td>{product.available_units}</td>
+                  <td>{product.carrier_name || product.carrier_phone || "-"}</td>
+                  <td>{product.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <button onClick={handleAddToCart} disabled={saving}>
+          {saving ? "Please wait..." : "Add to Cart"}
+        </button>
+        <button onClick={handlePlaceOrder} disabled={saving}>
+          Place Order From Cart
+        </button>
       </div>
     </div>
   );

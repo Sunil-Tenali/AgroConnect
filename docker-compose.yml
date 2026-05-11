@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16
+    container_name: agroconnect-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agroconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - agroconnect_pgdata:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agroconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./server
+    container_name: agroconnect-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: agroconnect
+      FRONTEND_ORIGIN: http://localhost:3000
+
+volumes:
+  agroconnect_pgdata:

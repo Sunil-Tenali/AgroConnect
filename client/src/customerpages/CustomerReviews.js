@@ -1,68 +1,107 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../stylesheets/dashboard-pages.css";
+import api from "../api";
 
 export default function CustomerReviews() {
-  const [reviews, setReviews] = useState([
-    {
-      review_id: 1,
-      product_name: "Organic Tomatoes",
-      farmer_name: "Rajesh Kumar",
-      rating: 5,
-      comment: "Fresh and high quality vegetables. Highly recommended!",
-      date: "2024-03-15",
-    },
-    {
-      review_id: 2,
-      product_name: "Fresh Apples",
-      farmer_name: "Priya Singh",
-      rating: 4,
-      comment: "Good quality but slightly damaged during delivery.",
-      date: "2024-03-12",
-    },
-  ]);
+  const customerId = sessionStorage.getItem("userEmail");
 
+  const [reviews, setReviews] = useState([]);
+  const [purchasedProducts, setPurchasedProducts] = useState([]);
   const [newReview, setNewReview] = useState({
-    product_name: "",
+    product_id: "",
     rating: 5,
     comment: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const fetchData = async () => {
+    if (!customerId) {
+      setError("Customer email is missing. Please login again.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      const [reviewsResponse, productsResponse] = await Promise.all([
+        api.get(`/customerdashboard/reviews?customer_id=${encodeURIComponent(customerId)}`),
+        api.get(
+          `/customerdashboard/purchased-products?customer_id=${encodeURIComponent(customerId)}`
+        ),
+      ]);
+      setReviews(reviewsResponse.data);
+      setPurchasedProducts(productsResponse.data);
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+      setError(err.response?.data?.error || "Unable to fetch reviews.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId]);
 
   const handleReviewChange = (e) => {
     const { name, value } = e.target;
-    setNewReview((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNewReview((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmitReview = () => {
-    if (newReview.product_name && newReview.comment) {
-      const review = {
-        review_id: reviews.length + 1,
-        product_name: newReview.product_name,
-        farmer_name: "Current Farmer",
-        rating: newReview.rating,
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+
+    if (!newReview.product_id || !newReview.comment) {
+      alert("Please select a product and enter your review.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await api.post("/customerdashboard/reviews", {
+        customer_id: customerId,
+        product_id: Number(newReview.product_id),
+        rating: Number(newReview.rating),
         comment: newReview.comment,
-        date: new Date().toISOString().split("T")[0],
-      };
-      setReviews([review, ...reviews]);
-      setNewReview({
-        product_name: "",
-        rating: 5,
-        comment: "",
       });
+
       alert("Review submitted successfully!");
+      setNewReview({ product_id: "", rating: 5, comment: "" });
+      await fetchData();
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      alert(err.response?.data?.error || "Failed to submit review.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const renderStars = (rating) => {
-    return "★".repeat(rating) + "☆".repeat(5 - rating);
+    const value = Math.round(Number(rating));
+    return "★".repeat(value) + "☆".repeat(5 - value);
   };
+
+  const averageRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((sum, review) => sum + Number(review.rating), 0) /
+          reviews.length
+        ).toFixed(1)
+      : "0.0";
+
+  const recentCount = reviews.filter(
+    (review) =>
+      new Date(review.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  ).length;
 
   return (
     <div className="dashboard-page-container">
       <h1>My Reviews & Ratings</h1>
-      <p>Share your experience with products and farmers</p>
+      <p>Share your experience with products and farmers.</p>
 
       <div className="dashboard-info-grid">
         <div className="info-card">
@@ -71,123 +110,83 @@ export default function CustomerReviews() {
         </div>
         <div className="info-card">
           <h3>Average Rating</h3>
-          <div className="value">
-            {(
-              reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-            ).toFixed(1)}
-          </div>
+          <div className="value">{averageRating}</div>
         </div>
         <div className="info-card">
-          <h3>Recent (30 days)</h3>
-          <div className="value">
-            {reviews.filter(
-              (r) =>
-                new Date(r.date) >
-                new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-            ).length}
-          </div>
+          <h3>Recent 30 Days</h3>
+          <div className="value">{recentCount}</div>
         </div>
       </div>
 
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
       <h2>Write a Review</h2>
-      <form className="dashboard-form">
-        <div className="form-row">
-          <div>
-            <label htmlFor="product">Product Name:</label>
-            <input
-              type="text"
-              id="product"
-              name="product_name"
-              placeholder="Enter product name"
-              value={newReview.product_name}
-              onChange={handleReviewChange}
-            />
-          </div>
-          <div>
-            <label htmlFor="rating">Rating:</label>
-            <select
-              id="rating"
-              name="rating"
-              value={newReview.rating}
-              onChange={handleReviewChange}
-            >
-              <option value="5">★★★★★ Excellent</option>
-              <option value="4">★★★★☆ Good</option>
-              <option value="3">★★★☆☆ Average</option>
-              <option value="2">★★☆☆☆ Poor</option>
-              <option value="1">★☆☆☆☆ Very Poor</option>
-            </select>
-          </div>
-        </div>
+      <form className="dashboard-form" onSubmit={handleSubmitReview}>
+        <label htmlFor="product_id">Purchased Product:</label>
+        <select
+          id="product_id"
+          name="product_id"
+          value={newReview.product_id}
+          onChange={handleReviewChange}
+          required
+        >
+          <option value="">-- Select a purchased product --</option>
+          {purchasedProducts.map((product) => (
+            <option key={product.product_id} value={product.product_id}>
+              {product.product_name} by {product.farmer_name}
+            </option>
+          ))}
+        </select>
+
+        <label htmlFor="rating">Rating:</label>
+        <select
+          id="rating"
+          name="rating"
+          value={newReview.rating}
+          onChange={handleReviewChange}
+        >
+          <option value="5">★★★★★ Excellent</option>
+          <option value="4">★★★★☆ Good</option>
+          <option value="3">★★★☆☆ Average</option>
+          <option value="2">★★☆☆☆ Poor</option>
+          <option value="1">★☆☆☆☆ Very Poor</option>
+        </select>
 
         <label htmlFor="comment">Your Review:</label>
         <textarea
           id="comment"
           name="comment"
-          placeholder="Share your experience with this product..."
           value={newReview.comment}
           onChange={handleReviewChange}
-          rows="4"
-        ></textarea>
+          required
+        />
 
-        <button type="button" onClick={handleSubmitReview}>
-          Submit Review
+        <button type="submit" disabled={saving || purchasedProducts.length === 0}>
+          {saving ? "Submitting..." : "Submit Review"}
         </button>
       </form>
 
       <h2>Your Reviews</h2>
-      {reviews.length > 0 ? (
-        <div style={{ marginTop: "20px" }}>
+      {loading ? (
+        <p>Loading reviews...</p>
+      ) : reviews.length > 0 ? (
+        <ul className="item-list">
           {reviews.map((review) => (
-            <div
-              key={review.review_id}
-              style={{
-                backgroundColor: "#f9f9f9",
-                padding: "15px",
-                marginBottom: "15px",
-                borderRadius: "8px",
-                borderLeft: "4px solid #64ba00",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "start",
-                  marginBottom: "10px",
-                }}
-              >
-                <div>
-                  <h3 style={{ margin: "0 0 5px 0" }}>
-                    {review.product_name}
-                  </h3>
-                  <p style={{ margin: "0", color: "#666", fontSize: "14px" }}>
-                    by {review.farmer_name}
-                  </p>
-                </div>
-                <span style={{ color: "#ff9800", fontWeight: "bold" }}>
-                  {renderStars(review.rating)}
-                </span>
-              </div>
-              <p style={{ margin: "10px 0", color: "#555" }}>
-                {review.comment}
+            <li key={review.review_id}>
+              <h3>{review.product_name}</h3>
+              <p>by {review.farmer_name}</p>
+              <p style={{ color: "#f4a100", fontSize: "20px" }}>
+                {renderStars(review.rating)}
               </p>
-              <p
-                style={{
-                  margin: "5px 0 0 0",
-                  color: "#999",
-                  fontSize: "12px",
-                }}
-              >
-                {review.date}
-              </p>
-            </div>
+              <p>{review.comment}</p>
+              <small>{review.date}</small>
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
-        <p style={{ textAlign: "center", color: "#999", marginTop: "20px" }}>
-          No reviews yet. Start reviewing products!
-        </p>
+        <div className="empty-state">
+          <p>No reviews yet. Purchase a product and start reviewing!</p>
+        </div>
       )}
     </div>
   );

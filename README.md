@@ -1,224 +1,352 @@
-# AgroConnect - Farmer-Customer Marketplace Platform
+# AgroConnect - Direct Farmer-to-Customer Marketplace
 
-## Overview
+A full-stack web application that bridges the gap between farmers and customers by creating a digital marketplace where agricultural producers can sell directly to consumers, eliminating intermediaries and ensuring fair pricing for both parties.
 
-**AgroConnect** is a full-stack web application that directly connects farmers with customers for the purchase and sale of fresh, locally-grown agricultural produce. The platform eliminates intermediaries, enabling farmers to maximize their profits while customers access fresh products at fair prices.
+## Problem & Solution
 
-## Problem Statement
+### The Problem
+- **Farmers**: Limited market access, dependency on middlemen, unpredictable income, lack of price control
+- **Customers**: Difficulty finding fresh local produce, limited product transparency, inflated prices due to multiple intermediaries
+- **Market Gap**: No efficient digital platform connecting local farmers directly with consumers
 
-- **For Farmers**: Limited market access, dependency on middlemen, unpredictable income
-- **For Customers**: Difficulty finding fresh local produce, lack of transparency in pricing and sourcing
-- **Solution**: AgroConnect creates a digital marketplace that bridges this gap through a user-friendly platform
+### The Solution
+AgroConnect creates a transparent, user-friendly marketplace that:
+- Enables farmers to list products and manage inventory independently
+- Provides customers with direct access to fresh produce from verified farmers
+- Offers machinery rental sharing economy for agricultural equipment
+- Implements a review system to ensure quality and build trust
+- Automates order management and delivery tracking
+
+---
 
 ## Key Features
 
-### For Farmers
-- **Product Listing**: Upload and manage agricultural products with details like price, category, available units
-- **Order Management**: Track incoming customer orders in real-time
-- **Dashboard**: View inventory, sales, and performance metrics
-- **Profile Management**: Maintain farmer information and contact details
+### For Farmers 👨‍🌾
+- **Product Management**: Create, update, and manage agricultural products with pricing and inventory
+- **Performance Dashboard**: Real-time metrics including total products, sales revenue, average rating, and customer reviews
+- **Profile Management**: Maintain farmer credentials and delivery contact details
+- **Machinery Rental**: List farm equipment available for rent to other farmers/users
+- **Review Tracking**: Monitor customer feedback and ratings on products
 
-### For Customers
-- **Product Discovery**: Browse available fresh produce from local farmers
-- **Shopping Cart**: Add products to cart and manage purchases
-- **Order Placement**: Complete transactions with delivery address management
-- **Order History**: View past orders and track current deliveries
-- **Reviews**: Leave feedback on products and farmers
+### For Customers 👥
+- **Product Discovery**: Browse available fresh produce from local farmers with ratings and details
+- **Shopping Cart**: Add products to cart with quantity management before checkout
+- **Order Placement**: Complete purchases with saved delivery addresses and real-time order tracking
+- **Order History**: View detailed order records including delivery dates and order status
+- **Review System**: Leave ratings and feedback on purchased products
+- **Machinery Rental**: Browse and rent farm equipment from other farmers
 
 ## Tech Stack
 
 ### Frontend
-- **Framework**: React 18 with React Router for navigation
-- **Styling**: CSS with custom stylesheets and styled-components
-- **Icons**: FontAwesome for UI icons
-- **HTTP Client**: Axios for API communication
-- **Build Tool**: Create React App
+- **Framework**: React 18 with React Router v6 for client-side navigation
+- **State Management**: React hooks (useState, useEffect) for local component state
+- **HTTP Client**: Axios for RESTful API communication
+- **Styling**: Custom CSS with responsive design
+- **Icons**: FontAwesome for intuitive UI elements
+- **Build Tool**: Create React App with webpack
 
 ### Backend
-- **Framework**: Node.js with Express.js
-- **CORS**: Enabled for cross-origin requests
-- **Database**: PostgreSQL with stored procedures for business logic
+- **Runtime**: Node.js
+- **Framework**: Express.js for REST API routing and middleware
+- **CORS**: Enabled for secure cross-origin communication
+- **Middleware**: express.json() for request parsing, async error handling wrapper
 
 ### Database
-- **PostgreSQL** with PL/pgSQL stored procedures
-- Tables: `f2c_user`, `product`, `product_shoppingcart`, `f2c_order`, `contact_detail`, and more
-- Stored procedures handle registration, product management, order placement, cart operations
+- **RDBMS**: PostgreSQL 16 with advanced features
+- **Query Language**: SQL with PL/pgSQL stored procedures
+- **Database Design**: Normalized schema with 13 core tables
+- **Key Features**:
+  - Stored procedures for business logic (registration, cart operations, order processing)
+  - Database triggers for automatic calculations (product ratings, farmer ratings)
+  - Indexes on frequently queried columns for performance optimization
+  - Constraints (foreign keys, unique, check) for data integrity
 
-## Project Structure
+### Infrastructure
+- **Containerization**: Docker & Docker Compose for local development
+- **Services**: PostgreSQL database container and Express backend container
+
+## Project Architecture
 
 ```
 AgroConnect/
-├── client/                          # React frontend
+├── client/                              # React frontend (Port 3000)
 │   ├── public/
+│   │   ├── index.html
+│   │   └── images/                      # App images and assets
 │   ├── src/
-│   │   ├── components/              # Reusable React components
-│   │   │   ├── main.js              # Landing page with hero section
-│   │   │   ├── farmerlogin.js       # Farmer login component
-│   │   │   ├── farmersignup.js      # Farmer registration
-│   │   │   ├── customerlogin.js     # Customer login
-│   │   │   ├── customersignup.js    # Customer registration
-│   │   │   ├── farmerdashboard.js   # Farmer dashboard container
-│   │   │   ├── customerdashboard.js # Customer dashboard container
-│   │   ├── customerpages/           # Customer-specific page components
-│   │   ├── pages/                   # Shared page components (Home, Contact, Reviews, etc.)
-│   │   ├── stylesheets/             # CSS files organized by feature
-│   │   ├── assets/                  # Images and videos
-│   │   ├── index.js                 # React entry point
-│   ├── package.json
+│   │   ├── components/
+│   │   │   ├── main.js                  # Landing page with role selection
+│   │   │   ├── farmerlogin.js           # Farmer authentication
+│   │   │   ├── farmersignup.js          # Farmer registration form
+│   │   │   ├── customerlogin.js         # Customer authentication
+│   │   │   ├── customersignup.js        # Customer registration form
+│   │   │   ├── farmerdashboard.js       # Farmer dashboard container w/ sidebar navigation
+│   │   │   ├── customerdashboard.js     # Customer dashboard container w/ sidebar navigation
+│   │   ├── customerpages/               # Customer-specific page components
+│   │   │   ├── productHome.js           # Browse products & add to cart
+│   │   │   ├── ShoppingCart.js          # View & manage cart items
+│   │   │   ├── customerorderdetails.js  # Order history & status tracking
+│   │   │   ├── ContactDetails.js        # Manage delivery addresses
+│   │   │   └── CustomerReviews.js       # Submit product reviews
+│   │   ├── pages/                       # Farmer/shared page components
+│   │   │   ├── Home.js                  # Farmer dashboard home with metrics
+│   │   │   ├── product.js               # Product listing & creation
+│   │   │   ├── Contact.js               # Contact details management
+│   │   │   ├── Machinery.js             # List & manage farm equipment
+│   │   │   ├── AvailableMachinery.js    # Browse available equipment for rent
+│   │   │   ├── Rented.js                # Track rented equipment
+│   │   │   └── Reviews.js               # View customer reviews & ratings
+│   │   ├── stylesheets/                 # Feature-organized CSS
+│   │   │   ├── styles.css               # Global styles
+│   │   │   ├── signup.css               # Auth form styling
+│   │   │   └── dashboard-pages.css      # Dashboard pages layout
+│   │   ├── api.js                       # Axios instance with base URL
+│   │   ├── index.js                     # React entry point with routing config
+│   │   └── index.css                    # App-wide styles
+│   └── package.json                     # Dependencies & scripts
 │
-├── server/                          # Node.js backend
-│   ├── database.js                  # PostgreSQL connection pool
-│   ├── server.js                    # Express app with API endpoints
-│   ├── package.json
+├── server/                              # Node.js/Express backend (Port 4000)
+│   ├── server.js                        # API endpoints & middleware
+│   ├── database.js                      # PostgreSQL connection pool
+│   └── package.json                     # Dependencies (express, cors, pg)
 │
-└── README.md
+├── database/
+│   └── init.sql                         # PostgreSQL schema, stored procedures, triggers
+│
+├── docker-compose.yml                   # Docker services configuration
+└── README.md                            # This file
 ```
 
-## How It Works
+## Database Design
 
-### User Registration & Authentication
-1. User selects role (Farmer or Customer)
-2. Completes signup form with email, name, and password
-3. Backend stores credentials in PostgreSQL via `register_farmer()` or `register_customer()` stored procedure
-4. User logs in with email/password; email stored in localStorage for session management
-5. **Future Enhancement**: Implement JWT token-based authentication
+### Core Tables
+1. **f2c_user** - User accounts (email PK, password, name, type)
+2. **customer** - Customer profile (FK to f2c_user)
+3. **farmer** - Farmer profile (FK to f2c_user, rating, description)
+4. **category** - Product categories (vegetables, fruits, dairy, etc.)
+5. **product** - Farmer's products (name, price, stock, rating)
+6. **carrier** - Delivery partners (name, phone, email)
+7. **contact_detail** - User delivery addresses (street, city, zipcode)
+8. **shopping_cart** - Customer carts (1 per customer)
+9. **product_shoppingcart** - Cart items (M2M between cart and products)
+10. **f2c_order** - Customer orders (order_id, total_price, status)
+11. **order_product** - Order line items (product details at order time)
+12. **review** - Product reviews (rating 1-5, comment, customer→product)
+13. **machinery** - Equipment listings (name, price_per_day, location)
+14. **machinery_rental** - Equipment rentals (rental_date, return_date, status)
 
-### For Farmers - Product Management
-1. Farmer logs in and accesses dashboard
-2. Navigates to "Add Product" section
-3. Provides product details: name, price, category, description, available units, carrier phone
-4. Backend calls `add_product()` stored procedure to store in database
-5. Product immediately available for customers to browse
+### Key Design Decisions
+- **Email as User ID**: Used as primary key in f2c_user table for simplicity (better: use UUID)
+- **Stored Procedures**: Business logic in database (registration, cart, orders) ensures consistency
+- **Database Triggers**: Automatic rating calculations when reviews are added/deleted
+- **Normalization**: Tables follow 3NF to minimize data redundancy
+- **Constraints**: Foreign keys prevent orphaned records; CHECK constraints validate values
 
-### For Customers - Shopping Flow
-1. Customer logs in and views product catalog
-2. Browses products fetched via `GET /customerdashboard/productHome`
-3. Adds items to shopping cart (stored in `product_shoppingcart` table)
-4. Provides delivery address information via "Contact Details" page
-5. Clicks "Place Order" → backend calls `place_order()` stored procedure
-6. Order created in `f2c_order` table and ready for farmer fulfillment
+---
 
 ## API Endpoints
 
 ### Authentication
-- `POST /farmersignup` - Register new farmer
-- `POST /customersignup` - Register new customer
-- `POST /login` - Login for both farmers and customers
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/login` | POST | Authenticate user, return user_type (0=customer, 1=farmer) |
+| `/farmersignup` | POST | Register new farmer account |
+| `/customersignup` | POST | Register new customer account |
 
-### Products
-- `GET /customerdashboard/productHome` - Fetch all available products
-- `POST /farmerdashboard/products` - Add new product (farmer only)
+### Customer Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/customerdashboard/productHome` | GET | Fetch all available products |
+| `/customerdashboard/productHome` | POST | Add products to shopping cart |
+| `/customerdashboard/cart` | GET | Get customer's cart items |
+| `/customerdashboard/cart/:product_id` | PATCH | Update item quantity in cart |
+| `/customerdashboard/cart/:product_id` | DELETE | Remove item from cart |
+| `/customerdashboard/placeorder` | POST | Convert cart to order |
+| `/customerdashboard/orders` | GET | Fetch customer's order history |
+| `/customerdashboard/customercontact` | GET/POST | Manage delivery addresses |
+| `/customerdashboard/reviews` | GET/POST | View and submit product reviews |
+| `/customerdashboard/purchased-products` | GET | Get products for reviews |
 
-### Shopping Cart
-- `POST /customerdashboard/productHome` - Add products to cart
+### Farmer Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/farmerdashboard/summary` | GET | Dashboard metrics (sales, ratings, products) |
+| `/farmerdashboard/products` | GET/POST | List or create products |
+| `/farmerdashboard/products/:product_id` | PATCH/DELETE | Update or delete product |
+| `/farmerdashboard/machinery` | GET/POST | List or add farm equipment |
+| `/farmerdashboard/available-machinery` | GET | Browse available equipment for rent |
+| `/farmerdashboard/rented` | GET | Track rented items |
+| `/farmerdashboard/rent-machinery` | POST | Rent equipment |
+| `/farmerdashboard/return-machinery` | POST | Return rented equipment |
+| `/farmerdashboard/reviews` | GET | View reviews on farmer's products |
+| `/farmerdashboard/profile` | PATCH | Update farmer profile/description |
 
-### Orders
-- `POST /customerdashboard/placeorder` - Place order from cart items
-- `POST /customerdashboard/customercontact` - Save delivery address
-- `GET /customerdashboard/customercontact` - Retrieve customer address
+### Metadata Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/categories` | GET | Fetch all product categories |
+| `/carriers` | GET | Fetch delivery carrier options |
+| `/health` | GET | Health check with database connectivity |
 
-## Setup Instructions
+---
+
+## How It Works
+
+### User Registration & Authentication
+1. User selects role (Farmer or Customer) on landing page
+2. Fills signup form with email, name, and password
+3. Backend validates input and calls stored procedure `register_farmer()` or `register_customer()`
+4. Procedure checks for duplicate email and creates user record in `f2c_user` table
+5. User logs in with email/password; email stored in sessionStorage
+6. Redirect to role-specific dashboard
+
+**Current Security Note**: Passwords stored in plaintext. **Production Should Use**: bcrypt for hashing + JWT tokens for stateless auth
+
+### Farmer Workflow - Listing Products
+1. Farmer logs in → Dashboard shows metrics (products, sales, ratings)
+2. Navigate to "Product Management" → Form to add product
+3. Fill details: name, category, price, description, available units, carrier phone
+4. Backend calls `add_product()` stored procedure
+5. Product stored with `in_stock = TRUE` if available_units > 0
+6. Product immediately visible to customers
+
+### Customer Workflow - Making a Purchase
+1. Customer logs in → Sees product catalog (fetched via JOIN with farmer, category, carrier)
+2. Filters/searches products → Selects items and clicks "Add to Cart"
+3. Backend calls `add_to_shopping_cart()` for each product
+4. Items stored in `product_shoppingcart` table
+5. Customer navigates to "Contact Details" → Saves delivery address
+6. Clicks "Place Order" → Backend calls `place_order()` stored procedure
+7. Procedure creates `f2c_order` record and `order_product` line items
+8. Order status: Processing → In Transit → Delivered
+9. Customer can leave reviews once order is received
+
+### Review System & Rating Calculation
+1. After order delivery, customer can review product/farmer
+2. Backend calls `add_review()` stored procedure with rating (1-5)
+3. Database trigger `trg_review_rating_update` fires:
+   - Recalculates product rating (AVG of all reviews)
+   - Recalculates farmer rating (AVG across all their products)
+4. Farmer can see reviews in their dashboard
+
+---
+
+## Running the Project
 
 ### Prerequisites
-- Node.js (v14+)
-- PostgreSQL (v12+)
-- npm or yarn
+- Node.js 16+ and npm
+- Docker & Docker Compose
+- PostgreSQL 16 (via Docker)
 
-### Backend Setup
-```bash
-cd server
-npm install
-# Update database credentials in database.js with your PostgreSQL connection
-node server.js
-# Server runs on http://localhost:4000
-```
+### Setup & Start
 
-### Frontend Setup
 ```bash
+# 1. Clone repository
+git clone <repo_url>
+cd AgroConnect
+
+# 2. Start PostgreSQL and backend via Docker
+docker-compose up -d
+
+# 3. Install frontend dependencies
 cd client
 npm install
+
+# 4. Start development server
 npm start
-# App runs on http://localhost:3000
+
+# Frontend: http://localhost:3000
+# Backend: http://localhost:4000
+# Database: localhost:5432
+
+# 5. Stop services (when done)
+docker-compose down
 ```
 
-### Database Setup
-1. Create PostgreSQL database named `backend`
-2. Create tables: `f2c_user`, `product`, `product_shoppingcart`, `f2c_order`, `contact_detail`
-3. Create stored procedures: `register_farmer()`, `register_customer()`, `add_product()`, `add_to_shopping_cart()`, `place_order()`, `add_contact_details()`
-4. Update connection credentials in `server/database.js`
+### Stopping Services
+```bash
+docker-compose down          # Stop containers
+docker-compose down -v       # Stop containers and remove volume data
+```
 
-## Implementation Details
+---
 
-### Frontend Architecture
-- **Component-Based**: Modular React components for scalability
-- **State Management**: Local state with `useState` for forms; localStorage for session persistence
-- **Routing**: React Router for SPA navigation between login, dashboards, and features
-- **Responsive Design**: CSS-based layouts adapt to different screen sizes
+## Key Implementation Details
 
-### Backend Architecture
-- **REST API**: RESTful endpoints for CRUD operations
-- **Stored Procedures**: Business logic encapsulated in PostgreSQL (advantages: security, data integrity, code reuse)
-- **Parameterized Queries**: Used for some endpoints (e.g., GET requests) to prevent SQL injection
-- **Error Handling**: Try-catch blocks with meaningful error responses
+### State Management
+- **Frontend**: React hooks (useState for local state, useEffect for side effects)
+- **Session**: Email stored in sessionStorage for cross-component access
+- **Persistence**: sessionStorage cleared on browser close (consider localStorage for "remember me")
 
-### Database Design
-- **Separation of Concerns**: User table (`f2c_user`) stores both farmer and customer data with implicit differentiation
-- **Transaction Safety**: Stored procedures ensure atomic operations (e.g., adding to cart and updating inventory)
-- **Relationships**: Foreign keys link products to farmers, orders to customers and products
+### Error Handling
+- Frontend: Try-catch blocks with user-friendly alerts
+- Backend: asyncHandler middleware catches Promise rejections from async endpoints
+- Database: Stored procedures validate data and raise errors on constraint violations
 
-### Security Considerations (Current vs. Production)
-| Aspect | Current | Production Needed |
-|--------|---------|-------------------|
-| Authentication | Email storage in localStorage | JWT tokens with expiration |
-| Passwords | Plain text in database | Bcrypt hashing |
-| Queries | Mix of parameterized and string interpolation | All parameterized queries |
-| API | No rate limiting | Rate limiting and throttling |
-| HTTPS | Not enforced | Mandatory HTTPS |
+### Authentication Flow
+```
+User Input → API Call → DB Query → Session Storage → Redirect
+```
 
-## How I Would Explain This in an Interview
+### Shopping Flow
+```
+Browse Products → Add to Cart → Save Address → Place Order → DB Creates Order
+                                ↓
+                    Call place_order() Stored Procedure
+                            ↓
+                    Create f2c_order + order_product records
+```
 
-**"AgroConnect is a full-stack marketplace application I built to solve the disconnect between farmers and consumers. 
+---
 
-**The Problem**: Farmers often depend on middlemen who take significant margins, while customers struggle to find fresh, local produce with transparency about origin and pricing.
+## Performance Optimizations
+1. **Database Indexes**: On frequently queried columns (farmer_id, category_id, customer_id)
+2. **Denormalization**: Pre-computed fields (product rating, farmer rating) updated via triggers
+3. **Query Optimization**: Joins on product, farmer, and category to fetch complete product info in single query
+4. **Connection Pooling**: PostgreSQL connection pool manages database connections efficiently
 
-**The Solution**: I created a web platform where farmers can list their products and customers can discover and purchase directly, cutting out intermediaries.
-
-**Technical Architecture**: 
-- The frontend is a React SPA with separate dashboards for farmers and customers, managing state with hooks and persisting session data with localStorage
-- The backend is Node.js/Express serving RESTful APIs that interact with a PostgreSQL database
-- Business logic is encapsulated in stored procedures for security and data integrity
-
-**Key Implementation Details**:
-1. **Authentication Flow**: Both user types register/login through unified endpoints; I store the email in localStorage for session management (though this would be JWT tokens in production)
-2. **Product Marketplace**: Farmers add products through a form that triggers a stored procedure to insert data; customers browse via a GET endpoint that queries the database
-3. **Order Processing**: When customers place orders, the backend processes cart items through a transaction-safe stored procedure
-
-**Design Decisions**:
-- I used stored procedures instead of raw queries for encapsulation and security
-- I separated farmer and customer concerns into different components while maintaining a single user table for simplicity
-- I chose localStorage for session persistence to keep the MVP lightweight, though JWT would be more secure at scale
-
-**Challenges & Learning**:
-- Managing state across multiple components taught me the importance of prop drilling and why context/Redux becomes necessary
-- Working with PostgreSQL stored procedures showed me the advantage of database-level business logic for consistency
-- Building responsive UI components made me appreciate CSS-in-JS solutions for maintainability
-
-**If I were to improve this**:
-1. Implement proper JWT-based authentication with refresh tokens
-2. Add input validation and sanitization at both client and server
-3. Implement role-based access control (RBAC) for more granular permissions
-4. Add real-time notifications for order updates using WebSockets
-5. Deploy using Docker containers with Kubernetes for scalability"
+---
 
 ## Future Enhancements
+1. **Security**: Implement bcrypt password hashing + JWT token authentication
+2. **Payment Gateway**: Integrate Razorpay/Stripe for real payments (currently: Cash on Delivery)
+3. **Search & Filters**: Add full-text search and advanced product filtering
+4. **Real-time Notifications**: WebSocket for order updates and messaging
+5. **Image Upload**: Cloudinary/AWS S3 for product images
+6. **Admin Dashboard**: Moderation, analytics, dispute resolution
+7. **Mobile App**: React Native or Flutter for iOS/Android
+8. **Geo-location**: Map integration to show nearby farmers/products
+9. **Performance**: Cache reviews with Redis, use CDN for static assets
+10. **Testing**: Unit tests (Jest), integration tests (Supertest), E2E tests (Cypress)
 
-1. **Authentication**: JWT-based authentication with refresh tokens and role-based access control
-2. **Security**: Input validation, sanitization, bcrypt password hashing, rate limiting
-3. **Payment Integration**: Stripe/PayPal integration for secure transactions
-4. **Real-Time Updates**: WebSocket support for live order notifications
-5. **Recommendation Engine**: ML-based product recommendations based on browsing history
-6. **Analytics**: Dashboard for farmers showing sales trends and customer insights
-7. **Mobile App**: React Native version for iOS/Android
-8. **Deployment**: Docker containerization and Kubernetes orchestration for scaling
+---
+
+## Project Highlights
+
+### What Makes This Project Interview-Ready
+✅ **Full-Stack Implementation**: React frontend + Node.js backend + PostgreSQL database  
+✅ **Real Business Logic**: Shopping carts, orders, reviews with constraints & triggers  
+✅ **Database Design**: Normalized schema with stored procedures for consistency  
+✅ **Error Handling**: Try-catch, validation, meaningful error messages  
+✅ **Code Organization**: Separated concerns (components, pages, styles, API)  
+✅ **Scalability**: Database indexes, connection pooling, modular architecture  
+✅ **User Experience**: Responsive dashboards, intuitive navigation, role-based UI  
+
+### Lessons Learned & Improvements
+- **Session Management**: sessionStorage is sufficient for demo; production needs JWT
+- **Password Security**: Store hashed passwords (bcrypt), not plaintext
+- **Database Design**: Email as PK works for MVP, but UUID is more scalable
+- **API Documentation**: Comprehensive endpoint documentation helps frontend development
+
+---
+
+## License
+
+This project is created for educational and portfolio purposes.
+
+---
+
+**Built with ❤️ using React, Node.js, and PostgreSQL**
 
 

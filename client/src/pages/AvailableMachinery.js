@@ -1,93 +1,128 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../stylesheets/dashboard-pages.css";
+import api from "../api";
 
 export default function AvailableMachinery() {
+  const currentUser = sessionStorage.getItem("userEmail");
+
+  const [machinery, setMachinery] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+  const [error, setError] = useState("");
+
+  const fetchMachinery = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await api.get("/farmerdashboard/available-machinery");
+      setMachinery(response.data);
+    } catch (err) {
+      console.error("Error fetching available machinery:", err);
+      setError(err.response?.data?.error || "Unable to fetch available machinery.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMachinery();
+  }, []);
+
+  const handleRent = async (machineryId) => {
+    if (!currentUser) {
+      alert("Please login again. User email is missing.");
+      return;
+    }
+
+    try {
+      setSavingId(machineryId);
+      await api.post("/farmerdashboard/rent-machinery", {
+        machinery_id: machineryId,
+        renter_id: currentUser,
+      });
+      alert("Machinery rented successfully.");
+      await fetchMachinery();
+    } catch (err) {
+      console.error("Error renting machinery:", err);
+      alert(err.response?.data?.error || "Unable to rent machinery.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const avgPrice =
+    machinery.length > 0
+      ? machinery.reduce((sum, item) => sum + Number(item.price_per_day), 0) /
+        machinery.length
+      : 0;
+
   return (
     <div className="dashboard-page-container">
       <h1>Available Machinery</h1>
-      <p>Browse and manage machinery available for rent in your area.</p>
+      <p>Browse machinery available for rent.</p>
 
       <div className="dashboard-info-grid">
         <div className="info-card">
           <h3>Total Available</h3>
-          <div className="value">24</div>
+          <div className="value">{machinery.length}</div>
         </div>
         <div className="info-card">
-          <h3>Nearby Farmers</h3>
-          <div className="value">12</div>
+          <h3>Owners</h3>
+          <div className="value">
+            {new Set(machinery.map((item) => item.farmer_id)).size}
+          </div>
         </div>
         <div className="info-card">
           <h3>Avg. Price/Day</h3>
-          <div className="value">₹500</div>
+          <div className="value">₹{Math.round(avgPrice).toLocaleString()}</div>
         </div>
       </div>
 
-      <h2>Available Equipment Catalog</h2>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Equipment</th>
-            <th>Owner</th>
-            <th>Price/Day</th>
-            <th>Location</th>
-            <th>Rating</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Tractor 50HP</td>
-            <td>Rajesh Kumar</td>
-            <td>₹600</td>
-            <td>District: Pune</td>
-            <td>★★★★★</td>
-          </tr>
-          <tr>
-            <td>Combine Harvester</td>
-            <td>Priya Singh</td>
-            <td>₹1200</td>
-            <td>District: Nashik</td>
-            <td>★★★★☆</td>
-          </tr>
-          <tr>
-            <td>Irrigation Pump</td>
-            <td>Vikram Patil</td>
-            <td>₹300</td>
-            <td>District: Aurangabad</td>
-            <td>★★★★★</td>
-          </tr>
-          <tr>
-            <td>Thresher</td>
-            <td>Sunita Dubey</td>
-            <td>₹400</td>
-            <td>District: Solapur</td>
-            <td>★★★☆☆</td>
-          </tr>
-        </tbody>
-      </table>
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <h2>Find Equipment by Filter</h2>
-      <form className="dashboard-form">
-        <div className="form-row">
-          <div>
-            <label htmlFor="equipment-type">Equipment Type:</label>
-            <select id="equipment-type" name="equipment-type">
-              <option value="">Select a type...</option>
-              <option value="tractor">Tractor</option>
-              <option value="harvester">Harvester</option>
-              <option value="pump">Irrigation Pump</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="location">Location/District:</label>
-            <input
-              type="text"
-              id="location"
-              placeholder="Enter district name..."
-            />
-          </div>
+      <h2>Available Equipment Catalog</h2>
+      {loading ? (
+        <p>Loading available machinery...</p>
+      ) : machinery.length > 0 ? (
+        <div style={{ overflowX: "auto" }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Equipment</th>
+                <th>Owner</th>
+                <th>Price/Day</th>
+                <th>Location</th>
+                <th>Rating</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {machinery.map((item) => (
+                <tr key={item.machinery_id}>
+                  <td>{item.name}</td>
+                  <td>{item.owner_name}</td>
+                  <td>₹{Number(item.price_per_day).toLocaleString()}</td>
+                  <td>{item.location || "-"}</td>
+                  <td>{Number(item.average_rating).toFixed(1)}</td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => handleRent(item.machinery_id)}
+                      disabled={savingId === item.machinery_id}
+                    >
+                      {savingId === item.machinery_id ? "Renting..." : "Rent"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <button type="submit">Search Equipment</button>
-      </form>
+      ) : (
+        <div className="empty-state">
+          <p>No machinery is available right now.</p>
+        </div>
+      )}
     </div>
   );
 }
