@@ -23,7 +23,7 @@ import Customerorderdetails from "./customerpages/customerorderdetails.js";
 import ShoppingCart from "./customerpages/ShoppingCart.js";
 import CustomerReviews from "./customerpages/CustomerReviews.js";
 import Reviews from "./pages/Reviews.js";
-import "./stylesheets/modern-ui.css";
+import "./stylesheets/styles.css";
 
 function App() {
   return (
