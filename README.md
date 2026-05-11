@@ -221,15 +221,4 @@ npm start
 7. **Mobile App**: React Native version for iOS/Android
 8. **Deployment**: Docker containerization and Kubernetes orchestration for scaling
 
-## Notes for Interviews
-
-This project demonstrates:
-- **Full-Stack Development**: End-to-end understanding from database design through frontend UX
-- **Database Design**: Schema modeling, stored procedures, transactions, relationships
-- **API Development**: RESTful design, error handling, parameterized queries
-- **Frontend Architecture**: Component composition, state management, routing
-- **Problem-Solving**: Identifying real-world issues and designing technical solutions
-- **Code Quality**: Clean code, meaningful comments, proper separation of concerns (though further improvements needed for production)
-
-The codebase is interview-ready and showcases practical knowledge of modern web development while acknowledging areas for production-level improvements (authentication, security, scalability).
 
